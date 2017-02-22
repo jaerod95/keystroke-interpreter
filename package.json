@@ -1,0 +1,23 @@
+{
+  "name": "keystroke-interpreter",
+  "version": "1.0.0",
+  "description": "Jay Young's research on keystroke analytics",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaerod95/keystroke-interpreter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jaerod95/keystroke-interpreter/issues"
+  },
+  "homepage": "https://github.com/jaerod95/keystroke-interpreter#readme",
+  "devDependencies": {
+    "json2csv": "^3.7.3",
+    "mongodb": "^2.2.24"
+  }
+}
