@@ -12,7 +12,7 @@ const Mongo     = require('mongodb');
 const assert    = require('assert');
 
 var people = 0;
-/*
+
 // Connection URL
 var url = 'mongodb://jrod95:jay-research@ds151108.mlab.com:51108/keystroke-data';
 
@@ -64,9 +64,9 @@ Mongo.MongoClient.connect(url, function (err, db) {
                 data['p1'].KeyEvents.push(dat[num].p1.KeyEvents);
                 data['p2'].KeyEvents.push(dat[num].p2.KeyEvents);
                 data['p3'].KeyEvents.push(dat[num].p3.KeyEvents);
-                data['p3'].Rating = dat[num].p3.Rating;
+                data['p3'].Rating = dat[num].p3.rating;
                 data['p4'].KeyEvents.push(dat[num].p4.KeyEvents);
-                data['p4'].Rating = dat[num].p4.Rating;
+                data['p4'].Rating = dat[num].p4.rating;
                 data['p5'].KeyEvents.push(dat[num].p5.KeyEvents);
                 data['p6'].KeyEvents.push(dat[num].p6.KeyEvents);
               }
@@ -99,15 +99,15 @@ function getDoc(db, str, callback) {
     callback(docs, str);
   });
 }
-*/
 
+/*
 var data = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', '677125182-data.txt'), 'utf8'));
 var pdf = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', '677125182-pdf.txt'), 'utf8'));
 
 var parser = new jr_keystroke_analyzer();
 parser.init(pdf, data, '677125182');
 
-
+*/
 
 /******************************************************************
  * Main variable to contail all funcitons out of the global scope *
@@ -136,7 +136,7 @@ function jr_keystroke_analyzer() {
    * @return {void}       void;                                           *
    ************************************************************************/
   this.init = function (pdf, data, str) {
-    /*
+    
     fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function(err) {
           if (err) {
           return console.log(err);
@@ -151,7 +151,7 @@ function jr_keystroke_analyzer() {
 
         console.log("The file was saved!");
     });
-    */
+    
 
     
     self.createPDF(pdf, str);
