@@ -149,13 +149,11 @@ function jr_keystroke_analyzer() {
     });
 */
     self.createPDF(pdf, str);
-    console.log(data);
     
-    for (objs in data) {
-      console.log(objs);
-      //self.data = data[objs];
-      //self.parse(objs);
-    }
+    var nonAlgorithm = require(path.join(__dirname, 'lib', 'nonAlgorithm.js'));
+    
+
+
 
 /*
     self.mainAnalysis();
