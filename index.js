@@ -157,7 +157,9 @@ function jr_keystroke_analyzer() {
     self.createPDF(pdf, str);
     self.data = data;
     var nonAlgorithm = require(path.join(__dirname, 'lib', 'nonAlgorithm.js'));
-    console.log(nonAlgorithm.backspace(self.data));
+    console.log(nonAlgorithm.backspace(self.data, 'backspace'));
+    console.log(nonAlgorithm.backspace(self.data, 'tab'));
+    console.log(nonAlgorithm.backspace(self.data, 'navKeys'));
 
 
 
