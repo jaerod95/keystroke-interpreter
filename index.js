@@ -6,10 +6,13 @@
 // 4. Create documentation of the tool                      //
 //////////////////////////////////////////////////////////////
 const fs        = require('fs');
+const path      = require('path');
 const json2csv  = require('json2csv');
 const Mongo     = require('mongodb');
 const assert    = require('assert');
 
+var people = 0;
+/*
 // Connection URL
 var url = 'mongodb://jrod95:jay-research@ds151108.mlab.com:51108/keystroke-data';
 
@@ -18,27 +21,63 @@ Mongo.MongoClient.connect(url, function (err, db) {
   assert.equal(null, err);
   console.log("Connected successfully to server");
 
-  getCollectionNames(db, function (docs) {
-    for (coll in docs) {
-      if (docs[coll].ns != 'keystroke-data.users' && docs[coll].ns != 'keystroke-data.objectlabs-system' && docs[coll].ns != 'keystroke-data.objectlabs-system.admin.collections' && docs[coll].ns != 'keystroke-data.to-process' && docs[coll].ns != 'keystroke-data.medians') {
+  getCollections(db, (collections) => {
+    var docs = [];
+    for (doc in collections) {
+      if (collections[doc].ns != 'keystroke-data.users'
+        && collections[doc].ns != 'keystroke-data.objectlabs-system'
+        && collections[doc].ns != 'keystroke-data.objectlabs-system.admin.collections'
+        && collections[doc].ns != 'keystroke-data.to-process'
+        && collections[doc].ns != 'keystroke-data.medians') {
 
-        var str = docs[coll].ns.substring(15);
-        getDocuments(db, str, function (documents) {
-          var data = [];
-          for (num in documents) {
-            data.push(documents[num]);
-          }
-          var parser = new jr_keystroke_analyzer();
-          parser.init(data);
-        });
+          people++;
+
+          getDoc(db, collections[doc].ns.substring(15), function(dat, str) {
+            var pdf = "";
+            data = {
+              "_id": null,
+              "user": null,
+              "p1": {
+                "KeyEvents": []
+              },
+              "p2": {
+                "KeyEvents": []
+              },
+              "p3": {
+                "KeyEvents": []
+              },
+              "p4": {
+                "KeyEvents": []
+              },
+              "p5": {
+                "KeyEvents": []
+              },
+              "p6": {
+                "KeyEvents": []
+              }
+            };
+            for (num in dat) {
+              if (dat[num]._id == "PDF")
+                pdf = dat[num].pdf;
+              else {
+                data.user = dat[num].user;
+                data['p1'].KeyEvents.push(dat[num].p1.KeyEvents);
+                data['p2'].KeyEvents.push(dat[num].p2.KeyEvents);
+                data['p3'].KeyEvents.push(dat[num].p3.KeyEvents);
+                data['p4'].KeyEvents.push(dat[num].p4.KeyEvents);
+                data['p5'].KeyEvents.push(dat[num].p5.KeyEvents);
+                data['p6'].KeyEvents.push(dat[num].p6.KeyEvents);
+              }
+            }
+            var parser = new jr_keystroke_analyzer();
+            parser.init(pdf, data, str);
+          });
       }
     }
-    console.log('Connection Closed');
-    db.close();
+
   });
 
-
-  function getCollectionNames(db, callback) {
+function getCollections(db, callback) {
     // Get all the collections from system
     var collection = db.collection('system.indexes');
     // Find some documents
@@ -47,16 +86,25 @@ Mongo.MongoClient.connect(url, function (err, db) {
       callback(docs);
     });
   }
-
-  function getDocuments(db, str, callback) {
-    var collection = db.collection(str);
-
-    collection.find({}).toArray(function (err, documents) {
-      callback(documents);
-    });
-  }
-
 });
+
+function getDoc(db, str, callback) {
+  var collection = db.collection(str);
+
+  collection.find({}).toArray(function (err, docs) {
+    assert.equal(err, null);
+    callback(docs, str);
+  });
+}
+*/
+
+var data = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', '677125182-data.txt'), 'utf8'));
+var pdf = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', '677125182-pdf.txt'), 'utf8'));
+
+var parser = new jr_keystroke_analyzer();
+parser.init(pdf, data, '677125182');
+
+
 
 /******************************************************************
  * Main variable to contail all funcitons out of the global scope *
@@ -83,13 +131,33 @@ function jr_keystroke_analyzer() {
    * @param  {Array} data  An array of JSON KeyStroke Data Files          *
    * @return {void}       void;                                           *
    ************************************************************************/
-  this.init = function (data) {
+  this.init = function (pdf, data, str) {
+/*
+    fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function(err) {
+          if (err) {
+          return console.log(err);
+        }
+
+        console.log("The file was saved!");    
+    });
+    fs.writeFile(path.join(__dirname, 'raw', str + '-pdf.txt'), JSON.stringify(pdf), function(err) {
+              if (err) {
+          return console.log(err);
+        }
+
+        console.log("The file was saved!");
+    });
+*/
+    self.createPDF(pdf, str);
+    console.log(data);
+    
     for (objs in data) {
-      self.data = data[objs];
-      self.parse(objs);
+      console.log(objs);
+      //self.data = data[objs];
+      //self.parse(objs);
     }
 
-
+/*
     self.mainAnalysis();
 
     var dwelltime         = json2csv(self.convertToCSVDwell(self.dwell_time_total));
@@ -122,8 +190,21 @@ function jr_keystroke_analyzer() {
       if (err) throw err;
     });
 
-
+*/
   },
+
+
+  /**************************************************
+   * 
+   **************************************************/
+    this.createPDF = (pdf, str) => {
+      fs.writeFile(path.join(__dirname, 'consent_forms', `${str}.pdf`), pdf, {encoding: 'binary'}, function (err) {
+        if (err) {
+          return console.log(err);
+        }
+        console.log("The file was saved!");
+      });
+    },
 
     /************************************************
      * All Analysis Start Here, Calculates:         *

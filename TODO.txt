@@ -1,0 +1,15 @@
+15 algorithms.
+
+Number of times backspace is hit
+·         Number of times Tab is hit
+·         Cursor navigation keys
+·         Participant method of error correcting
+·         error correcting
+·         overlapping of keys combinations – Shift, caps lock for writing capital and small letters
+·         typing speed
+·         characteristic errors
+·         Top 25 digraphs
+1.       th
+2.       he
+3.       in
+...
