@@ -1,8 +1,8 @@
 15 algorithms.
 
-Number of times backspace is hit
-·         Number of times Tab is hit
-·         Cursor navigation keys
+Number of times backspace is hit +
+·         Number of times Tab is hit +
+·         Cursor navigation keys ??
 ·         Participant method of error correcting
 ·         error correcting
 ·         overlapping of keys combinations – Shift, caps lock for writing capital and small letters
@@ -14,5 +14,4 @@ Number of times backspace is hit
 3.       in
 ...
 
-work 11:25
-1hr
+1hr 30 mins

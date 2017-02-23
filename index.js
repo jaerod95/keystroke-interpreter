@@ -114,6 +114,7 @@ parser.init(pdf, data, '677125182');
  * @type {Object}                                                 *
  ******************************************************************/
 function jr_keystroke_analyzer() {
+  this.nonAlgorithm = require(path.join(__dirname, 'lib', 'nonAlgorithm.js'));
   self                          = this;
   this.data                     = [];
   this.results                  = {};
@@ -156,13 +157,8 @@ function jr_keystroke_analyzer() {
     
     self.createPDF(pdf, str);
     self.data = data;
-    var nonAlgorithm = require(path.join(__dirname, 'lib', 'nonAlgorithm.js'));
-    console.log(nonAlgorithm.backspace(self.data, 'backspace'));
-    console.log(nonAlgorithm.backspace(self.data, 'tab'));
-    console.log(nonAlgorithm.backspace(self.data, 'navKeys'));
-
-
-
+    self.single_key_counts(data);
+    self.nonAlgorithm.speed(data);
 /*
     self.mainAnalysis();
 
@@ -199,7 +195,6 @@ function jr_keystroke_analyzer() {
 */
   },
 
-
   /**************************************************
    * 
    **************************************************/
@@ -211,6 +206,13 @@ function jr_keystroke_analyzer() {
         console.log("The file was saved!");
       });
     },
+
+    this.single_key_counts = (data) => {
+      self.results['key_counts'] = {};
+      for (var i = 0; i < 256; i++) {
+        self.results.key_counts[i] = this.nonAlgorithm.key_count_of_type(data, i);
+      }
+    }
 
     /************************************************
      * All Analysis Start Here, Calculates:         *
