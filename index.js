@@ -33,10 +33,9 @@ Mongo.MongoClient.connect(url, function (err, db) {
           people++;
 
           getDoc(db, collections[doc].ns.substring(15), function(dat, str) {
+            console.log('this ran');
             var pdf = "";
             data = {
-              "_id": null,
-              "user": null,
               "p1": {
                 "KeyEvents": []
               },
@@ -44,10 +43,12 @@ Mongo.MongoClient.connect(url, function (err, db) {
                 "KeyEvents": []
               },
               "p3": {
-                "KeyEvents": []
+                "KeyEvents": [],
+                "Rating": null,
               },
               "p4": {
-                "KeyEvents": []
+                "KeyEvents": [],
+                "Rating": null,
               },
               "p5": {
                 "KeyEvents": []
@@ -60,17 +61,19 @@ Mongo.MongoClient.connect(url, function (err, db) {
               if (dat[num]._id == "PDF")
                 pdf = dat[num].pdf;
               else {
-                data.user = dat[num].user;
                 data['p1'].KeyEvents.push(dat[num].p1.KeyEvents);
                 data['p2'].KeyEvents.push(dat[num].p2.KeyEvents);
                 data['p3'].KeyEvents.push(dat[num].p3.KeyEvents);
+                data['p3'].Rating = dat[num].p3.Rating;
                 data['p4'].KeyEvents.push(dat[num].p4.KeyEvents);
+                data['p4'].Rating = dat[num].p4.Rating;
                 data['p5'].KeyEvents.push(dat[num].p5.KeyEvents);
                 data['p6'].KeyEvents.push(dat[num].p6.KeyEvents);
               }
             }
             var parser = new jr_keystroke_analyzer();
             parser.init(pdf, data, str);
+            console.log('this ran');
           });
       }
     }
@@ -113,6 +116,7 @@ parser.init(pdf, data, '677125182');
 function jr_keystroke_analyzer() {
   self                          = this;
   this.data                     = [];
+  this.results                  = {};
   this.orderedEvents            = [];
   this.dwell_time               = {};
   this.flight_time_one          = {};
@@ -132,7 +136,7 @@ function jr_keystroke_analyzer() {
    * @return {void}       void;                                           *
    ************************************************************************/
   this.init = function (pdf, data, str) {
-/*
+    /*
     fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function(err) {
           if (err) {
           return console.log(err);
@@ -147,11 +151,13 @@ function jr_keystroke_analyzer() {
 
         console.log("The file was saved!");
     });
-*/
+    */
+
+    
     self.createPDF(pdf, str);
-    
+    self.data = data;
     var nonAlgorithm = require(path.join(__dirname, 'lib', 'nonAlgorithm.js'));
-    
+    nonAlgorithm.backspace(self.data);
 
 
 
