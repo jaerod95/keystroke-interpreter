@@ -5,11 +5,11 @@
 // 3. Create a real-time authenticator                      //
 // 4. Create documentation of the tool                      //
 //////////////////////////////////////////////////////////////
-const fs        = require('fs');
-const path      = require('path');
-const json2csv  = require('json2csv');
-const Mongo     = require('mongodb');
-const assert    = require('assert');
+const fs = require('fs');
+const path = require('path');
+const json2csv = require('json2csv');
+const Mongo = require('mongodb');
+const assert = require('assert');
 
 var people = 0;
 /*
@@ -24,18 +24,19 @@ Mongo.MongoClient.connect(url, function (err, db) {
   getCollections(db, (collections) => {
     var docs = [];
     for (doc in collections) {
-      if (collections[doc].ns != 'keystroke-data.users'
-        && collections[doc].ns != 'keystroke-data.objectlabs-system'
-        && collections[doc].ns != 'keystroke-data.objectlabs-system.admin.collections'
-        && collections[doc].ns != 'keystroke-data.to-process'
-        && collections[doc].ns != 'keystroke-data.medians') {
+      if (collections[doc].ns != 'keystroke-data.users' &&
+        collections[doc].ns != 'keystroke-data.objectlabs-system' &&
+        collections[doc].ns != 'keystroke-data.objectlabs-system.admin.collections' &&
+        collections[doc].ns != 'keystroke-data.to-process' &&
+        collections[doc].ns != 'keystroke-data.medians') {
 
-          people++;
+        people++;
 
-          getDoc(db, collections[doc].ns.substring(15), function(dat, str) {
-            console.log('this ran');
-            var pdf = "";
-            data = {
+        getDoc(db, collections[doc].ns.substring(15), function (dat, str) {
+          console.log('this ran');
+          var pdf = "";
+          data = {
+            "keystrokes": {
               "p1": {
                 "KeyEvents": []
               },
@@ -44,11 +45,9 @@ Mongo.MongoClient.connect(url, function (err, db) {
               },
               "p3": {
                 "KeyEvents": [],
-                "Rating": null,
               },
               "p4": {
                 "KeyEvents": [],
-                "Rating": null,
               },
               "p5": {
                 "KeyEvents": []
@@ -56,31 +55,50 @@ Mongo.MongoClient.connect(url, function (err, db) {
               "p6": {
                 "KeyEvents": []
               }
-            };
-            for (num in dat) {
-              if (dat[num]._id == "PDF")
-                pdf = dat[num].pdf;
-              else {
-                data['p1'].KeyEvents.push(dat[num].p1.KeyEvents);
-                data['p2'].KeyEvents.push(dat[num].p2.KeyEvents);
-                data['p3'].KeyEvents.push(dat[num].p3.KeyEvents);
-                data['p3'].Rating = dat[num].p3.rating;
-                data['p4'].KeyEvents.push(dat[num].p4.KeyEvents);
-                data['p4'].Rating = dat[num].p4.rating;
-                data['p5'].KeyEvents.push(dat[num].p5.KeyEvents);
-                data['p6'].KeyEvents.push(dat[num].p6.KeyEvents);
-              }
+            },
+            "realResponse": {
+              "p1": [],
+              "p2": [],
+              "p3": [],
+              "p4": [],
+              "p5": [],
+              "p6": []
+            },
+            "ratings": {
+              "p3": [],
+              "p4": []
             }
-            var parser = new jr_keystroke_analyzer();
-            parser.init(pdf, data, str);
-            console.log('this ran');
-          });
+          };
+          for (num in dat) {
+            if (dat[num]._id == "PDF")
+              pdf = dat[num].pdf;
+            else {
+              data.keystrokes['p1'].KeyEvents.push(dat[num].keystrokes.p1.KeyEvents);
+              data.keystrokes['p2'].KeyEvents.push(dat[num].keystrokes.p2.KeyEvents);
+              data.keystrokes['p3'].KeyEvents.push(dat[num].keystrokes.p3.KeyEvents);
+              data.keystrokes['p4'].KeyEvents.push(dat[num].keystrokes.p4.KeyEvents);
+              data.keystrokes['p5'].KeyEvents.push(dat[num].keystrokes.p5.KeyEvents);
+              data.keystrokes['p6'].KeyEvents.push(dat[num].keystrokes.p6.KeyEvents);
+              data.realResponse.p1.push(dat[num].realResponse.p1);
+              data.realResponse.p2.push(dat[num].realResponse.p2);
+              data.realResponse.p3.push(dat[num].realResponse.p3);
+              data.realResponse.p4.push(dat[num].realResponse.p4);
+              data.realResponse.p5.push(dat[num].realResponse.p5);
+              data.realResponse.p6.push(dat[num].realResponse.p6);
+              data.ratings.p3.push(dat[num].ratings.p3);
+              data.ratings.p4.push(dat[num].ratings.p4);
+            }
+          }
+          var parser = new jr_keystroke_analyzer();
+          parser.init(pdf, data, str);
+          console.log('this ran');
+        });
       }
     }
 
   });
 
-function getCollections(db, callback) {
+  function getCollections(db, callback) {
     // Get all the collections from system
     var collection = db.collection('system.indexes');
     // Find some documents
@@ -101,11 +119,11 @@ function getDoc(db, str, callback) {
 }
 */
 
-var data = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', '677125182-data.txt'), 'utf8'));
-var pdf = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', '677125182-pdf.txt'), 'utf8'));
+var data = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', 'jrod95-data.txt'), 'utf8'));
+var pdf = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', 'jrod95-pdf.txt'), 'utf8'));
 
 var parser = new jr_keystroke_analyzer();
-parser.init(pdf, data, '677125182');
+parser.init(pdf, data, 'jrod95');
 
 
 
@@ -115,21 +133,21 @@ parser.init(pdf, data, '677125182');
  ******************************************************************/
 function jr_keystroke_analyzer() {
   this.nonAlgorithm = require(path.join(__dirname, 'lib', 'nonAlgorithm.js'));
-  self                          = this;
-  this.data                     = [];
-  this.results                  = {};
-  this.orderedEvents            = [];
-  this.dwell_time               = {};
-  this.flight_time_one          = {};
-  this.flight_time_two          = {};
-  this.flight_time_three        = {};
-  this.flight_time_four         = {};
+  self = this;
+  this.data = [];
+  this.results = {};
+  this.orderedEvents = [];
+  this.dwell_time = {};
+  this.flight_time_one = {};
+  this.flight_time_two = {};
+  this.flight_time_three = {};
+  this.flight_time_four = {};
 
-  this.dwell_time_total         = {};
-  this.flight_time_one_total    = {};
-  this.flight_time_two_total    = {};
-  this.flight_time_three_total  = {};
-  this.flight_time_four_total   = {};
+  this.dwell_time_total = {};
+  this.flight_time_one_total = {};
+  this.flight_time_two_total = {};
+  this.flight_time_three_total = {};
+  this.flight_time_four_total = {};
 
   /************************************************************************
    * Organizer for All parsing and link to csv conver and master analysis *
@@ -137,75 +155,89 @@ function jr_keystroke_analyzer() {
    * @return {void}       void;                                           *
    ************************************************************************/
   this.init = function (pdf, data, str) {
-    /*
-    fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function(err) {
-          if (err) {
-          return console.log(err);
-        }
+    /*  
+      fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function(err) {
+            if (err) {
+            return console.log(err);
+          }
 
-        console.log("The file was saved!");    
-    });
-    fs.writeFile(path.join(__dirname, 'raw', str + '-pdf.txt'), JSON.stringify(pdf), function(err) {
-              if (err) {
-          return console.log(err);
-        }
+          console.log("The file was saved!");    
+      });
+      fs.writeFile(path.join(__dirname, 'raw', str + '-pdf.txt'), JSON.stringify(pdf), function(err) {
+                if (err) {
+            return console.log(err);
+          }
 
-        console.log("The file was saved!");
-    });
-    */
+          console.log("The file was saved!");
+      });
+    */ 
 
-    
-    self.createPDF(pdf, str);
-    self.data = data;
-    self.single_key_counts(data);
-    self.nonAlgorithm.speed(data);
-/*
-    self.mainAnalysis();
 
-    var dwelltime         = json2csv(self.convertToCSVDwell(self.dwell_time_total));
-    var flight_time_one   = json2csv(self.convertToCSVFlight(self.flight_time_one_total));
-    var flight_time_two   = json2csv(self.convertToCSVFlight(self.flight_time_two_total));
-    var flight_time_three = json2csv(self.convertToCSVFlight(self.flight_time_three_total));
-    var flight_time_four  = json2csv(self.convertToCSVFlight(self.flight_time_four_total));
-    var bool = fs.existsSync(`./results/${self.data.Username}/master`)
-      if (!bool) {
-        fs.mkdirSync('./results/' + self.data.Username + '/master');
-      }
+      self.createPDF(pdf, str);
+      self.data = data;
+      self.single_key_counts(self.data.keystrokes);
+      self.nonAlgorithm.speed(self.data.keystrokes);
 
-    fs.writeFile('./results/' + self.data.Username + '/master/dwell-time-' + self.data._id + '.csv', dwelltime, function (err) {
-      if (err) throw err;
-    });
+      self.saveJSONResults(str);
 
-    fs.writeFile('./results/' + self.data.Username + '/master/flight-time-1-' + self.data._id + '.csv', flight_time_one, function (err) {
-      if (err) throw err;
-    });
+      /*
+          self.mainAnalysis();
 
-    fs.writeFile('./results/' + self.data.Username + '/master/flight-time-2-' + self.data._id + '.csv', flight_time_two, function (err) {
-      if (err) throw err;
-    });
+          var dwelltime         = json2csv(self.convertToCSVDwell(self.dwell_time_total));
+          var flight_time_one   = json2csv(self.convertToCSVFlight(self.flight_time_one_total));
+          var flight_time_two   = json2csv(self.convertToCSVFlight(self.flight_time_two_total));
+          var flight_time_three = json2csv(self.convertToCSVFlight(self.flight_time_three_total));
+          var flight_time_four  = json2csv(self.convertToCSVFlight(self.flight_time_four_total));
+          var bool = fs.existsSync(`./results/${self.data.Username}/master`)
+            if (!bool) {
+              fs.mkdirSync('./results/' + self.data.Username + '/master');
+            }
 
-    fs.writeFile('./results/' + self.data.Username + '/master/flight-time-3-' + self.data._id + '.csv', flight_time_three, function (err) {
-      if (err) throw err;
-    });
+          fs.writeFile('./results/' + self.data.Username + '/master/dwell-time-' + self.data._id + '.csv', dwelltime, function (err) {
+            if (err) throw err;
+          });
 
-    fs.writeFile('./results/' + self.data.Username + '/master/flight-time-4-' + self.data._id + '.csv', flight_time_four, function (err) {
-      if (err) throw err;
-    });
+          fs.writeFile('./results/' + self.data.Username + '/master/flight-time-1-' + self.data._id + '.csv', flight_time_one, function (err) {
+            if (err) throw err;
+          });
 
-*/
-  },
+          fs.writeFile('./results/' + self.data.Username + '/master/flight-time-2-' + self.data._id + '.csv', flight_time_two, function (err) {
+            if (err) throw err;
+          });
 
-  /**************************************************
-   * 
-   **************************************************/
+          fs.writeFile('./results/' + self.data.Username + '/master/flight-time-3-' + self.data._id + '.csv', flight_time_three, function (err) {
+            if (err) throw err;
+          });
+
+          fs.writeFile('./results/' + self.data.Username + '/master/flight-time-4-' + self.data._id + '.csv', flight_time_four, function (err) {
+            if (err) throw err;
+          });
+
+      */
+    }
+
+  /************************************************************************
+   * Organizer for All parsing and link to csv conver and master analysis *
+   * @param  {Array} data  An array of JSON KeyStroke Data Files          *
+   * @return {void}       void;                                           *
+   ************************************************************************/
+
     this.createPDF = (pdf, str) => {
-      fs.writeFile(path.join(__dirname, 'consent_forms', `${str}.pdf`), pdf, {encoding: 'binary'}, function (err) {
+      fs.writeFile(path.join(__dirname, 'consent_forms', `${str}.pdf`), pdf, {
+        encoding: 'binary'
+      }, function (err) {
         if (err) {
           return console.log(err);
         }
-        console.log("The file was saved!");
+        console.log("The pdf-file was saved!");
       });
-    },
+    }
+
+  /************************************************************************
+   * Organizer for All parsing and link to csv conver and master analysis *
+   * @param  {Array} data  An array of JSON KeyStroke Data Files          *
+   * @return {void}       void;                                           *
+   ************************************************************************/
 
     this.single_key_counts = (data) => {
       self.results['key_counts'] = {};
@@ -214,27 +246,44 @@ function jr_keystroke_analyzer() {
       }
     }
 
-    /************************************************
-     * All Analysis Start Here, Calculates:         *
-     *  Dwell Time,                                 *
-     *  Flight Time,                                *
-     *  N-Graph                                     *
-     * @param  {String} str Data in String Format   *
-     * @return {void}       void;                   *
-     ************************************************/
-    this.parse = function (data) {
 
-      self.orderedEvents            = self.orderKeyEvents(self.data.KeyEvents);
-      self.dwell_time               = self.calculateDwellTime(self.data.KeyEvents);
-      self.flight_time_one          = self.calculateFlightTimeOne(self.orderedEvents);
-      self.flight_time_two          = self.calculateFlightTimeTwo(self.orderedEvents);
-      self.flight_time_three        = self.calculateFlightTimeThree(self.orderedEvents);
-      self.flight_time_four         = self.calculateFlightTimeFour(self.orderedEvents);
-      self.dwell_time_total         = self.mergeDwell(self.dwell_time, self.dwell_time_total);
-      self.flight_time_one_total    = self.merge(self.flight_time_one, self.flight_time_one_total);
-      self.flight_time_two_total    = self.merge(self.flight_time_two, self.flight_time_two_total);
-      self.flight_time_three_total  = self.merge(self.flight_time_three, self.flight_time_three_total);
-      self.flight_time_four_total   = self.merge(self.flight_time_four, self.flight_time_four_total);
+    this.saveJSONResults = (str) => {
+      fs.writeFile(path.join(__dirname, 'results', `${str}.js`), JSON.stringify(self.results), (err) => {
+        if (err)
+          return console.log(err);
+        console.log('The results were saved!');
+      });
+    }
+
+
+
+
+
+
+
+
+
+  /************************************************
+   * All Analysis Start Here, Calculates:         *
+   *  Dwell Time,                                 *
+   *  Flight Time,                                *
+   *  N-Graph                                     *
+   * @param  {String} str Data in String Format   *
+   * @return {void}       void;                   *
+   ************************************************/
+  this.parse = function (data) {
+
+      self.orderedEvents = self.orderKeyEvents(self.data.KeyEvents);
+      self.dwell_time = self.calculateDwellTime(self.data.KeyEvents);
+      self.flight_time_one = self.calculateFlightTimeOne(self.orderedEvents);
+      self.flight_time_two = self.calculateFlightTimeTwo(self.orderedEvents);
+      self.flight_time_three = self.calculateFlightTimeThree(self.orderedEvents);
+      self.flight_time_four = self.calculateFlightTimeFour(self.orderedEvents);
+      self.dwell_time_total = self.mergeDwell(self.dwell_time, self.dwell_time_total);
+      self.flight_time_one_total = self.merge(self.flight_time_one, self.flight_time_one_total);
+      self.flight_time_two_total = self.merge(self.flight_time_two, self.flight_time_two_total);
+      self.flight_time_three_total = self.merge(self.flight_time_three, self.flight_time_three_total);
+      self.flight_time_four_total = self.merge(self.flight_time_four, self.flight_time_four_total);
 
       self.checkDirectory()
     },
@@ -256,7 +305,7 @@ function jr_keystroke_analyzer() {
         }
       }
       return oldData;
-    },
+    }
 
     /************************************************
      * Merges Flight Time data from the current doc *
@@ -268,14 +317,14 @@ function jr_keystroke_analyzer() {
     this.merge = function (newData, oldData) {
       for (obj in newData) {
         if (oldData[obj]) {
-          for(item in newData[obj].FlightTime)
-          oldData[obj].FlightTime.push(newData[obj].FlightTime[item]);
+          for (item in newData[obj].FlightTime)
+            oldData[obj].FlightTime.push(newData[obj].FlightTime[item]);
         } else {
           oldData[obj] = newData[obj];
         }
       }
       return oldData;
-    },
+    }
 
     /************************************************
      * Checks to see if the new directory for       *
@@ -285,13 +334,13 @@ function jr_keystroke_analyzer() {
     this.checkDirectory = function () {
       var newDir = self.data.Username;
       var exists = fs.existsSync('./results/' + self.data.Username)
-        if (exists) {
-          self.writeFiles(newDir);
-        } else {
-          fs.mkdirSync('./results/' + newDir);
-          self.writeFiles(newDir);
-        }
-    },
+      if (exists) {
+        self.writeFiles(newDir);
+      } else {
+        fs.mkdirSync('./results/' + newDir);
+        self.writeFiles(newDir);
+      }
+    }
 
     /************************************************
      * writes CSV files to new directory            *
@@ -300,11 +349,11 @@ function jr_keystroke_analyzer() {
      ************************************************/
     this.writeFiles = function (newDir) {
 
-      var dwelltime           = json2csv(self.convertToCSVDwell(self.dwell_time));
-      var flight_time_one     = json2csv(self.convertToCSVFlight(self.flight_time_one));
-      var flight_time_two     = json2csv(self.convertToCSVFlight(self.flight_time_two));
-      var flight_time_three   = json2csv(self.convertToCSVFlight(self.flight_time_three));
-      var flight_time_four    = json2csv(self.convertToCSVFlight(self.flight_time_four));
+      var dwelltime = json2csv(self.convertToCSVDwell(self.dwell_time));
+      var flight_time_one = json2csv(self.convertToCSVFlight(self.flight_time_one));
+      var flight_time_two = json2csv(self.convertToCSVFlight(self.flight_time_two));
+      var flight_time_three = json2csv(self.convertToCSVFlight(self.flight_time_three));
+      var flight_time_four = json2csv(self.convertToCSVFlight(self.flight_time_four));
 
       fs.writeFile('./results/' + newDir + '/dwell-time-' + self.data._id + '.csv', dwelltime, function (err) {
         if (err) throw err;
@@ -325,7 +374,7 @@ function jr_keystroke_analyzer() {
       fs.writeFile('./results/' + newDir + '/flight-time-4-' + self.data._id + '.csv', flight_time_four, function (err) {
         if (err) throw err;
       });
-    },
+    }
 
     /*****************************************************************************
      * Orders every keystroke Press and Release pair by Timestamp of Press       *
@@ -359,24 +408,22 @@ function jr_keystroke_analyzer() {
         str += '"' + data[i].Key + '": [],';
       }
 
-      str         = str.slice(0, -1);
-      str        += '}';
-      result      = JSON.parse(str);
+      str = str.slice(0, -1);
+      str += '}';
+      result = JSON.parse(str);
       var keyTemp = [];
-      var temp    = [];
+      var temp = [];
 
-      for (var k  = data.length - 1; k >= 0; k--) {
+      for (var k = data.length - 1; k >= 0; k--) {
         var index = keyTemp.indexOf(data[k].KeyCode);
 
         if (index != -1) {
-          var dwelltime   = temp[index].Timestamp - data[k].Timestamp;
-          var PressValues = [
-            {
-              "Press"   : data[k].Timestamp,
-              "Release" : temp[index].Timestamp,
-              "allData" : [data[k], data[index]]
-            }
-          ];
+          var dwelltime = temp[index].Timestamp - data[k].Timestamp;
+          var PressValues = [{
+            "Press": data[k].Timestamp,
+            "Release": temp[index].Timestamp,
+            "allData": [data[k], data[index]]
+          }];
 
           result[data[k].Key].push(PressValues)
           temp.splice(index, 1);
@@ -398,7 +445,7 @@ function jr_keystroke_analyzer() {
       self.sortByKey(toSort, 'Press');
       result = toSort;
       return result;
-    },
+    }
 
     /**********************************************************
      * Sorts an array of JSON objects by property value       *
@@ -408,7 +455,8 @@ function jr_keystroke_analyzer() {
      **********************************************************/
     this.sortByKey = function (array, key) {
       return array.sort(function (a, b) {
-        var x = a[key]; var y = b[key];
+        var x = a[key];
+        var y = b[key];
         return ((x < y) ? -1 : ((x > y) ? 1 : 0));
       });
     },
@@ -429,7 +477,7 @@ function jr_keystroke_analyzer() {
           var temp = {};
           var bool = false;
           for (var k = 0; k < csv.data.length; k++) {
-            if (csv.data[k].hasOwnProperty(prop)) { } else {
+            if (csv.data[k].hasOwnProperty(prop)) {} else {
               temp[prop] = obj[prop][i];
               csv.data[k][prop] = obj[prop][i];
               bool = true;
@@ -443,7 +491,7 @@ function jr_keystroke_analyzer() {
         }
       }
       return csv;
-    },
+    }
 
     /**********************************************************
      * Converts JSON Object into CSV Format (flightTime)      *
@@ -462,7 +510,7 @@ function jr_keystroke_analyzer() {
           var bool = false;
           for (var k = 0; k < csv.data.length; k++) {
             var newProp = `From '${obj[prop].From}' To '${obj[prop].To}'`;
-            if (csv.data[k].hasOwnProperty(newProp)) { } else {
+            if (csv.data[k].hasOwnProperty(newProp)) {} else {
               var newProp = `From '${obj[prop].From}' To '${obj[prop].To}'`;
               csv.data[k][newProp] = obj[prop].FlightTime[i];
               bool = true;
@@ -477,7 +525,7 @@ function jr_keystroke_analyzer() {
         }
       }
       return csv;
-    },
+    }
 
     /********************************************************
      * Calculates the DwellTime by Key                      *
@@ -485,8 +533,8 @@ function jr_keystroke_analyzer() {
      * @return {JSON}      JSON object of DwellTime per Key *
      ********************************************************/
     this.calculateDwellTime = function (data) {
-      var result  = {}
-      var str     = '{'
+      var result = {}
+      var str = '{'
 
       for (var i = 0; i < data.length; i++) {
 
@@ -494,12 +542,12 @@ function jr_keystroke_analyzer() {
 
       }
 
-      str         = str.slice(0, -1);
-      str        += '}';
-      result      = JSON.parse(str);
+      str = str.slice(0, -1);
+      str += '}';
+      result = JSON.parse(str);
 
       var keyTemp = [];
-      var temp    = [];
+      var temp = [];
 
       for (var k = data.length - 1; k >= 0; k--) {
 
@@ -512,9 +560,7 @@ function jr_keystroke_analyzer() {
           temp.splice(index, 1);
           keyTemp.splice(index, 1);
 
-        } 
-        
-        else {
+        } else {
 
           keyTemp.push(data[k].KeyCode);
           temp.push(data[k]);
@@ -522,7 +568,7 @@ function jr_keystroke_analyzer() {
         }
       }
       return result;
-    },
+    }
 
     /************************************************************
      * Calculates the flight time between all key combinations, *
@@ -536,26 +582,28 @@ function jr_keystroke_analyzer() {
 
       for (var i = 0; i < obj.length - 1; i++) {
 
-        var flight_time   = obj[i + 1].Press - obj[i].Release;
-        var from_key      = obj[i].allData[0].Key;
-        var to_key        = obj[i + 1].allData[0].Key;
-        var both_keys     = from_key + to_key;
+        var flight_time = obj[i + 1].Press - obj[i].Release;
+        var from_key = obj[i].allData[0].Key;
+        var to_key = obj[i + 1].allData[0].Key;
+        var both_keys = from_key + to_key;
 
         if (result.hasOwnProperty(both_keys)) {
 
           result[both_keys].FlightTime.push(flight_time);
 
-        } 
-        
-        else {
+        } else {
 
-          var temp          = { "From": from_key, "To": to_key, "FlightTime": [flight_time] };
+          var temp = {
+            "From": from_key,
+            "To": to_key,
+            "FlightTime": [flight_time]
+          };
           result[both_keys] = temp;
 
         }
       }
       return result;
-    },
+    }
 
     /************************************************************
      * Calculates the flight time between all key combinations, *
@@ -568,25 +616,28 @@ function jr_keystroke_analyzer() {
 
       for (var i = 0; i < obj.length - 1; i++) {
 
-        var flight_time   = obj[i + 1].Release - obj[i].Release;
-        var from_key      = obj[i].allData[0].Key;
-        var to_key        = obj[i + 1].allData[0].Key;
-        var both_keys     = from_key + to_key;
+        var flight_time = obj[i + 1].Release - obj[i].Release;
+        var from_key = obj[i].allData[0].Key;
+        var to_key = obj[i + 1].allData[0].Key;
+        var both_keys = from_key + to_key;
 
         if (result.hasOwnProperty(both_keys)) {
 
           result[both_keys].FlightTime.push(flight_time);
 
-        }
-        else {
+        } else {
 
-          var temp          = { "From": from_key, "To": to_key, "FlightTime": [flight_time] };
+          var temp = {
+            "From": from_key,
+            "To": to_key,
+            "FlightTime": [flight_time]
+          };
           result[both_keys] = temp;
 
         }
       }
       return result;
-    },
+    }
 
     /************************************************************
      * Calculates the flight time between all key combinations, *
@@ -599,25 +650,28 @@ function jr_keystroke_analyzer() {
 
       for (var i = 0; i < obj.length - 1; i++) {
 
-        var flight_time   = obj[i + 1].Press - obj[i].Press;
-        var from_key      = obj[i].allData[0].Key;
-        var to_key        = obj[i + 1].allData[0].Key;
-        var both_keys     = from_key + to_key;
+        var flight_time = obj[i + 1].Press - obj[i].Press;
+        var from_key = obj[i].allData[0].Key;
+        var to_key = obj[i + 1].allData[0].Key;
+        var both_keys = from_key + to_key;
 
         if (result.hasOwnProperty(both_keys)) {
 
           result[both_keys].FlightTime.push(flight_time);
 
-        } 
-        else {
+        } else {
 
-          var temp          = { "From": from_key, "To": to_key, "FlightTime": [flight_time] };
+          var temp = {
+            "From": from_key,
+            "To": to_key,
+            "FlightTime": [flight_time]
+          };
           result[both_keys] = temp;
 
         }
       }
       return result;
-    },
+    }
 
     /************************************************************
      * Calculates the flight time between all key combinations, *
@@ -630,24 +684,27 @@ function jr_keystroke_analyzer() {
 
       for (var i = 0; i < obj.length - 1; i++) {
 
-        var flight_time     = obj[i + 1].Release - obj[i].Press;
-        var from_key        = obj[i].allData[0].Key;
-        var to_key          = obj[i + 1].allData[0].Key;
-        var both_keys       = from_key + to_key;
+        var flight_time = obj[i + 1].Release - obj[i].Press;
+        var from_key = obj[i].allData[0].Key;
+        var to_key = obj[i + 1].allData[0].Key;
+        var both_keys = from_key + to_key;
 
         if (result.hasOwnProperty(both_keys)) {
 
           result[both_keys].FlightTime.push(flight_time);
-        } 
-        else {
+        } else {
 
-          var temp          = { "From": from_key, "To": to_key, "FlightTime": [flight_time] };
+          var temp = {
+            "From": from_key,
+            "To": to_key,
+            "FlightTime": [flight_time]
+          };
           result[both_keys] = temp;
 
         }
       }
       return result;
-    },
+    }
 
     /*********************************************
      * Calculates other N-graphs                 *
@@ -657,16 +714,16 @@ function jr_keystroke_analyzer() {
 
     this.calculateNGraph = function (obj) {
       console.log('calculate n-graph here')
-    },
+    }
 
     this.mainAnalysis = function () {
 
-      var DT_M  = calculateMedianDT(self.dwell_time_total);
+      var DT_M = calculateMedianDT(self.dwell_time_total);
       var FT1_M = calculateMedianFT(self.flight_time_one_total);
       var FT2_M = calculateMedianFT(self.flight_time_two_total);
       var FT3_M = calculateMedianFT(self.flight_time_three_total);
       var FT4_M = calculateMedianFT(self.flight_time_four_total);
-      
+
       uploadToMongo();
 
       function calculateMedianDT(obj) {
@@ -708,42 +765,42 @@ function jr_keystroke_analyzer() {
 
           var collection = db.collection('medians');
           var str = self.data.Username;
-          collection.find({ "_id": str }).toArray(function (err, docs) {
+          collection.find({
+            "_id": str
+          }).toArray(function (err, docs) {
             assert.equal(err, null);
             if (docs.length == 0) {
-              collection.insertOne(
-                {
-                  "_id": str,
-                  "DT": DT_M,
-                  "FT1": FT1_M,
-                  "FT2": FT2_M,
-                  "FT3": FT3_M,
-                  "FT4": FT4_M,
+              collection.insertOne({
+                "_id": str,
+                "DT": DT_M,
+                "FT1": FT1_M,
+                "FT2": FT2_M,
+                "FT3": FT3_M,
+                "FT4": FT4_M,
 
-                }, function (err, result) {
-                  assert.equal(err, null);
-                  console.log("Inserted a document into the Medians collection.");
-                });
+              }, function (err, result) {
+                assert.equal(err, null);
+                console.log("Inserted a document into the Medians collection.");
+              });
               console.log('Connection Closed');
               db.close();
-            }
-
-            else {
-              collection.updateOne(
-                { "_id": str },
-                { $set: {
+            } else {
+              collection.updateOne({
+                "_id": str
+              }, {
+                $set: {
                   "DT": DT_M,
                   "FT1": FT1_M,
                   "FT2": FT2_M,
                   "FT3": FT3_M,
                   "FT4": FT4_M,
                 }
-                
 
-                }, function (err, result) {
-                  assert.equal(err, null);
-                  console.log("Inserted a document into the Medians collection.");
-                });
+
+              }, function (err, result) {
+                assert.equal(err, null);
+                console.log("Inserted a document into the Medians collection.");
+              });
               console.log('Connection Closed');
               db.close();
             }
@@ -752,16 +809,16 @@ function jr_keystroke_analyzer() {
         });
 
 
-          function prettyMongo(obj) {
-            for (values in obj) {
-              if (values.indexOf('.') != -1) {
-                var newValues = values.replace(/\./g, 'period');
-                obj[newValues] = obj[values];
-                delete obj[values];
-              }
+        function prettyMongo(obj) {
+          for (values in obj) {
+            if (values.indexOf('.') != -1) {
+              var newValues = values.replace(/\./g, 'period');
+              obj[newValues] = obj[values];
+              delete obj[values];
             }
-            return obj;
           }
+          return obj;
+        }
       }
     }
 }
