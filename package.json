@@ -19,5 +19,6 @@
   "devDependencies": {
     "json2csv": "^3.7.3",
     "mongodb": "^2.2.24"
-  }
+  },
+  "dependencies": {}
 }

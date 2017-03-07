@@ -133,6 +133,7 @@ parser.init(pdf, data, 'jrod95');
  ******************************************************************/
 function jr_keystroke_analyzer() {
   this.nonAlgorithm = require(path.join(__dirname, 'lib', 'nonAlgorithm.js'));
+  this.Algorithm = require(path.join(__dirname, 'lib', 'Algorithm.js'))
   self = this;
   this.data = [];
   this.results = {};
@@ -161,6 +162,7 @@ function jr_keystroke_analyzer() {
     self.createPDF(pdf, str);
     self.data = data;
     self.single_key_counts(self.data.keystrokes);
+    self.results['keyData'] = self.Algorithm.keyStats(self.data.keystrokes);
     self.results['WPM'] = self.nonAlgorithm.speed(self.data.keystrokes);
 
     self.saveJSONResults(str);
@@ -233,11 +235,15 @@ function jr_keystroke_analyzer() {
 
 
   this.saveJSONResults = (str) => {
-    fs.writeFile(path.join(__dirname, 'results', `${str}.js`), JSON.stringify(self.results), (err) => {
-      if (err)
-        return console.log(err);
-      console.log('The results were saved!');
-    });
+
+    for (obj in self.results) {
+
+      fs.writeFile(path.join(__dirname, 'results', `${str}-${obj}.js`), JSON.stringify(self.results[obj], null, 2), (err) => {
+        if (err)
+          return console.log(err);
+        console.log('The results were saved!');
+      });
+    }
   }
 
 
@@ -807,23 +813,23 @@ function jr_keystroke_analyzer() {
     }
   }
 
-    this.dev_writeDBData = (pdf, data, str) => {
+  this.dev_writeDBData = (pdf, data, str) => {
 
-      fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function(err) {
-            if (err) {
-            return console.log(err);
-          }
+    fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function (err) {
+      if (err) {
+        return console.log(err);
+      }
 
-          console.log("The file was saved!");    
-      });
-      fs.writeFile(path.join(__dirname, 'raw', str + '-pdf.txt'), JSON.stringify(pdf), function(err) {
-                if (err) {
-            return console.log(err);
-          }
+      console.log("The file was saved!");
+    });
+    fs.writeFile(path.join(__dirname, 'raw', str + '-pdf.txt'), JSON.stringify(pdf), function (err) {
+      if (err) {
+        return console.log(err);
+      }
 
-          console.log("The file was saved!");
-      });
-    }
+      console.log("The file was saved!");
+    });
+  }
 
 
 
