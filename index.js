@@ -12,118 +12,82 @@ const Mongo = require('mongodb');
 const assert = require('assert');
 
 var people = 0;
-/*
-// Connection URL
-var url = 'mongodb://jrod95:jay-research@ds151108.mlab.com:51108/keystroke-data';
 
+// Connection URL
+var url = 'mongodb://jason:jason@ds119380.mlab.com:19380/keystroke'
+//Old Database
+//var url = 'mongodb://jrod95:jay-research@ds151108.mlab.com:51108/keystroke-data';
+
+  var pdfDataDone = false;
+  var keystrokeDataDone = false;
 // Use connect method to connect to the server
 Mongo.MongoClient.connect(url, function (err, db) {
   assert.equal(null, err);
   console.log("Connected successfully to server");
 
-  getCollections(db, (collections) => {
-    var docs = [];
-    for (doc in collections) {
-      if (collections[doc].ns != 'keystroke-data.users' &&
-        collections[doc].ns != 'keystroke-data.objectlabs-system' &&
-        collections[doc].ns != 'keystroke-data.objectlabs-system.admin.collections' &&
-        collections[doc].ns != 'keystroke-data.to-process' &&
-        collections[doc].ns != 'keystroke-data.medians') {
+  getCollectionData(db.collection('pdf'), (documents) => {
+    var pdfs = [];
+    for (doc in documents) {
 
-        people++;
+      pdfs.push({ "_id": documents[doc]._id, "pdf": documents[doc].pdf });
 
-        getDoc(db, collections[doc].ns.substring(15), function (dat, str) {
-          console.log('this ran');
-          var pdf = "";
-          data = {
-            "keystrokes": {
-              "p1": {
-                "KeyEvents": []
-              },
-              "p2": {
-                "KeyEvents": []
-              },
-              "p3": {
-                "KeyEvents": [],
-              },
-              "p4": {
-                "KeyEvents": [],
-              },
-              "p5": {
-                "KeyEvents": []
-              },
-              "p6": {
-                "KeyEvents": []
-              }
-            },
-            "realResponse": {
-              "p1": [],
-              "p2": [],
-              "p3": [],
-              "p4": [],
-              "p5": [],
-              "p6": []
-            },
-            "ratings": {
-              "p3": [],
-              "p4": []
-            }
-          };
-          for (num in dat) {
-            if (dat[num]._id == "PDF")
-              pdf = dat[num].pdf;
-            else {
-              data.keystrokes['p1'].KeyEvents.push(dat[num].keystrokes.p1.KeyEvents);
-              data.keystrokes['p2'].KeyEvents.push(dat[num].keystrokes.p2.KeyEvents);
-              data.keystrokes['p3'].KeyEvents.push(dat[num].keystrokes.p3.KeyEvents);
-              data.keystrokes['p4'].KeyEvents.push(dat[num].keystrokes.p4.KeyEvents);
-              data.keystrokes['p5'].KeyEvents.push(dat[num].keystrokes.p5.KeyEvents);
-              data.keystrokes['p6'].KeyEvents.push(dat[num].keystrokes.p6.KeyEvents);
-              data.realResponse.p1.push(dat[num].realResponse.p1);
-              data.realResponse.p2.push(dat[num].realResponse.p2);
-              data.realResponse.p3.push(dat[num].realResponse.p3);
-              data.realResponse.p4.push(dat[num].realResponse.p4);
-              data.realResponse.p5.push(dat[num].realResponse.p5);
-              data.realResponse.p6.push(dat[num].realResponse.p6);
-              data.ratings.p3.push(dat[num].ratings.p3);
-              data.ratings.p4.push(dat[num].ratings.p4);
-            }
-          }
-          var parser = new jr_keystroke_analyzer();
-          parser.init(pdf, data, str);
-          console.log('this ran');
-        });
-      }
     }
-
+    var pdfSaver = new PDF_Saver();
+    pdfSaver.savePDFs(pdfs);
+    pdfDataDone = true;
   });
 
-  function getCollections(db, callback) {
-    // Get all the collections from system
-    var collection = db.collection('system.indexes');
-    // Find some documents
-    collection.find({}).toArray(function (err, docs) {
-      assert.equal(err, null);
-      callback(docs);
-    });
-  }
+  getCollectionData(db.collection('gathered-data'), (documents) => {
+    for (doc in documents) {
+      var analyzer = new jr_keystroke_analyzer();
+      analyzer.init(documents[doc]);
+    }
+    keystrokeDataDone = true;
+  });
+
+  closeDatabase(pdfDataDone, keystrokeDataDone, db);
 });
 
-function getDoc(db, str, callback) {
-  var collection = db.collection(str);
 
+  function closeDatabase(pdf, data, db) {
+    if (pdf && data) {
+      console.log('database closed!!');
+      db.close();
+      return;
+    } else {
+      console.log('database still working...')
+      setTimeout(closeDatabase, 1000, pdfDataDone, keystrokeDataDone, db);
+      return;
+    }
+  }
+
+function getCollectionData(collection, callback) {
   collection.find({}).toArray(function (err, docs) {
     assert.equal(err, null);
-    callback(docs, str);
+    callback(docs);
   });
 }
-*/
-
+/*
 var data = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', 'jrod95-data.txt'), 'utf8'));
 var pdf = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', 'jrod95-pdf.txt'), 'utf8'));
 
 var parser = new jr_keystroke_analyzer();
 parser.init(pdf, data, 'jrod95');
+*/
+function PDF_Saver() {
+  this.savePDFs = (pdf_Array) => {
+    pdf_Array.forEach((val, ind, arr) => {
+
+      fs.writeFile(path.join(__dirname, 'consent_forms', val._id + ".pdf"), JSON.stringify(val.pdf), function (err) {
+        if (err) {
+          return console.log(err);
+        }
+        console.log("The file was saved!");
+      });
+
+    });
+  }
+}
 
 
 
@@ -155,10 +119,10 @@ function jr_keystroke_analyzer() {
    * @param  {Array} data  An array of JSON KeyStroke Data Files          *
    * @return {void}       void;                                           *
    ************************************************************************/
-  this.init = function (pdf, data, str) {
-
-    //self.dev_writeDBData(pdf, data, str);
-
+  this.init = function (data) {
+    console.log('new interpreter object created');
+    self.dev_writeDBData(data);
+    return;
     self.createPDF(pdf, str);
     self.data = data;
     self.single_key_counts(self.data.keystrokes);
@@ -813,16 +777,9 @@ function jr_keystroke_analyzer() {
     }
   }
 
-  this.dev_writeDBData = (pdf, data, str) => {
+  this.dev_writeDBData = (data) => {
 
-    fs.writeFile(path.join(__dirname, 'raw', str + '-data.txt'), JSON.stringify(data), function (err) {
-      if (err) {
-        return console.log(err);
-      }
-
-      console.log("The file was saved!");
-    });
-    fs.writeFile(path.join(__dirname, 'raw', str + '-pdf.txt'), JSON.stringify(pdf), function (err) {
+    fs.writeFile(path.join(__dirname, 'raw', data._id + ".txt"), JSON.stringify(data), function (err) {
       if (err) {
         return console.log(err);
       }
@@ -830,10 +787,4 @@ function jr_keystroke_analyzer() {
       console.log("The file was saved!");
     });
   }
-
-
-
-
-
-
 }

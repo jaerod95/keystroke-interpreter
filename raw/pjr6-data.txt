@@ -1,1 +1,0 @@
-{"keystrokes":{"p1":{"KeyEvents":[]},"p2":{"KeyEvents":[]},"p3":{"KeyEvents":[]},"p4":{"KeyEvents":[]},"p5":{"KeyEvents":[]},"p6":{"KeyEvents":[]}},"realResponse":{"p1":[],"p2":[],"p3":[],"p4":[],"p5":[],"p6":[]},"ratings":{"p3":[],"p4":[]}}

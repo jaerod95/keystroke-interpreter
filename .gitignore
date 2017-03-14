@@ -1,3 +1,4 @@
 node_modules/
 results/**/*
 consent_forms/**/*
+raw/
