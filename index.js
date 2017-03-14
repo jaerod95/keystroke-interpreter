@@ -11,42 +11,44 @@ const json2csv = require('json2csv');
 const Mongo = require('mongodb');
 const assert = require('assert');
 
-var people = 0;
+var getDatabaseResults = false;
 
 // Connection URL
 var url = 'mongodb://jason:jason@ds119380.mlab.com:19380/keystroke'
 //Old Database
 //var url = 'mongodb://jrod95:jay-research@ds151108.mlab.com:51108/keystroke-data';
 
-  var pdfDataDone = false;
-  var keystrokeDataDone = false;
-// Use connect method to connect to the server
-Mongo.MongoClient.connect(url, function (err, db) {
-  assert.equal(null, err);
-  console.log("Connected successfully to server");
+var pdfDataDone = false;
+var keystrokeDataDone = false;
 
-  getCollectionData(db.collection('pdf'), (documents) => {
-    var pdfs = [];
-    for (doc in documents) {
+if (getDatabaseResults) {
+  // Use connect method to connect to the server
+  Mongo.MongoClient.connect(url, function (err, db) {
+    assert.equal(null, err);
+    console.log("Connected successfully to server");
 
-      pdfs.push({ "_id": documents[doc]._id, "pdf": documents[doc].pdf });
+    getCollectionData(db.collection('pdf'), (documents) => {
+      var pdfs = [];
+      for (doc in documents) {
 
-    }
-    var pdfSaver = new PDF_Saver();
-    pdfSaver.savePDFs(pdfs);
-    pdfDataDone = true;
+        pdfs.push({ "_id": documents[doc]._id, "pdf": documents[doc].pdf });
+
+      }
+      var pdfSaver = new PDF_Saver();
+      pdfSaver.savePDFs(pdfs);
+      pdfDataDone = true;
+    });
+
+    getCollectionData(db.collection('gathered-data'), (documents) => {
+      for (doc in documents) {
+        var analyzer = new jr_keystroke_analyzer();
+        analyzer.init(documents[doc]);
+      }
+      keystrokeDataDone = true;
+    });
+
+    closeDatabase(pdfDataDone, keystrokeDataDone, db);
   });
-
-  getCollectionData(db.collection('gathered-data'), (documents) => {
-    for (doc in documents) {
-      var analyzer = new jr_keystroke_analyzer();
-      analyzer.init(documents[doc]);
-    }
-    keystrokeDataDone = true;
-  });
-
-  closeDatabase(pdfDataDone, keystrokeDataDone, db);
-});
 
 
   function closeDatabase(pdf, data, db) {
@@ -61,19 +63,19 @@ Mongo.MongoClient.connect(url, function (err, db) {
     }
   }
 
-function getCollectionData(collection, callback) {
-  collection.find({}).toArray(function (err, docs) {
-    assert.equal(err, null);
-    callback(docs);
-  });
+  function getCollectionData(collection, callback) {
+    collection.find({}).toArray(function (err, docs) {
+      assert.equal(err, null);
+      callback(docs);
+    });
+  }
 }
-/*
-var data = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', 'jrod95-data.txt'), 'utf8'));
-var pdf = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', 'jrod95-pdf.txt'), 'utf8'));
+else {
+  var data = JSON.parse(fs.readFileSync(path.join(__dirname, 'raw', 'britt254-1489461477446.txt'), 'utf8'));
+  var parser = new jr_keystroke_analyzer();
+  parser.init(data);
+}
 
-var parser = new jr_keystroke_analyzer();
-parser.init(pdf, data, 'jrod95');
-*/
 function PDF_Saver() {
   this.savePDFs = (pdf_Array) => {
     pdf_Array.forEach((val, ind, arr) => {
