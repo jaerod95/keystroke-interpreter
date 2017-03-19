@@ -14,4 +14,6 @@ Number of times backspace is hit +
 3.       in
 ...
 
-i owe 6.5 hrs
+known errors:
+    The events are sometimes overlapping, but i don't check after sorting the pairedEvents
+    Keydown multiple times just throws out the key and it's associated events.
