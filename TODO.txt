@@ -17,3 +17,16 @@ Number of times backspace is hit +
 known errors:
     The events are sometimes overlapping, but i don't check after sorting the pairedEvents
     Keydown multiple times just throws out the key and it's associated events.
+
+
+
+
+    Build the download tool to work in batches. to fix overflow.
+    Build a sh executable to run the downloader.
+    send a downloadable version to jay.
+
+    Build the rest of the keystroke algorithms.
+    Build a sh exectuable to run the analysis.
+    send a downloadable version to jay.
+
+    Test everything.
